@@ -1,0 +1,167 @@
+<?xml version="1.0" standalone="yes"?>
+<UsersSet>
+  <Divisions>
+    <division_id>1</division_id>
+    <division_name>Отдел Летающих Тапок</division_name>
+  </Divisions>
+  <Divisions>
+    <division_id>2</division_id>
+    <division_name>Департамент Секретных Улучшений Чая</division_name>
+  </Divisions>
+  <Divisions>
+    <division_id>3</division_id>
+    <division_name>Сектор Космических Ананасов</division_name>
+  </Divisions>
+  <Divisions>
+    <division_id>4</division_id>
+    <division_name>Бюро Разбирательства в Забытых Носках</division_name>
+  </Divisions>
+  <Employees>
+    <employee_id>1</employee_id>
+    <employee_name>Иванова Анна Сергеевна</employee_name>
+    <birthday_date>1990-01-01T00:00:00+05:00</birthday_date>
+    <inn>936874512120</inn>
+    <snils>73821590647</snils>
+    <division_id>1</division_id>
+    <passport_data_series>1234</passport_data_series>
+    <passport_data_numbers>567890</passport_data_numbers>
+  </Employees>
+  <Employees>
+    <employee_id>2</employee_id>
+    <employee_name>Петров Владимир Александрович</employee_name>
+    <birthday_date>1991-02-02T00:00:00+05:00</birthday_date>
+    <inn>518729346020</inn>
+    <snils>56980132472</snils>
+    <division_id>2</division_id>
+    <passport_data_series>5678</passport_data_series>
+    <passport_data_numbers>123456</passport_data_numbers>
+  </Employees>
+  <Employees>
+    <employee_id>3</employee_id>
+    <employee_name>Смирнова Елена Игоревна</employee_name>
+    <birthday_date>1992-03-03T00:00:00+05:00</birthday_date>
+    <inn>240196583712</inn>
+    <snils>12341358901</snils>
+    <division_id>3</division_id>
+    <passport_data_series>9876</passport_data_series>
+    <passport_data_numbers>234567</passport_data_numbers>
+  </Employees>
+  <Employees>
+    <employee_id>4</employee_id>
+    <employee_name>Кузнецов Дмитрий Владимирович</employee_name>
+    <birthday_date>1993-04-04T00:00:00+06:00</birthday_date>
+    <inn>061043258912</inn>
+    <snils>08765432102</snils>
+    <division_id>4</division_id>
+    <passport_data_series>5432</passport_data_series>
+    <passport_data_numbers>345678</passport_data_numbers>
+  </Employees>
+  <Work>
+    <order_id>1</order_id>
+    <joblist_id>1</joblist_id>
+    <employee_id>1</employee_id>
+    <start_date_work>2023-01-02T00:00:00+05:00</start_date_work>
+    <end_date_work>2023-01-05T00:00:00+05:00</end_date_work>
+    <job_description>Разобрать собрать</job_description>
+  </Work>
+  <Work>
+    <order_id>2</order_id>
+    <joblist_id>2</joblist_id>
+    <employee_id>2</employee_id>
+    <start_date_work>2023-02-02T00:00:00+05:00</start_date_work>
+    <end_date_work>2023-02-05T00:00:00+05:00</end_date_work>
+    <job_description>Помыть и покрасить</job_description>
+  </Work>
+  <Work>
+    <order_id>3</order_id>
+    <joblist_id>3</joblist_id>
+    <employee_id>3</employee_id>
+    <start_date_work>2023-03-02T00:00:00+05:00</start_date_work>
+    <end_date_work>2023-03-05T00:00:00+05:00</end_date_work>
+    <job_description>Намусорить и убраться</job_description>
+  </Work>
+  <Work>
+    <order_id>4</order_id>
+    <joblist_id>4</joblist_id>
+    <employee_id>4</employee_id>
+    <start_date_work>2023-04-02T00:00:00+05:00</start_date_work>
+    <end_date_work>2023-04-05T00:00:00+05:00</end_date_work>
+    <job_description>Отдохнуть и все</job_description>
+  </Work>
+  <JobList>
+    <joblist_id>1</joblist_id>
+    <job_name>Job 1</job_name>
+  </JobList>
+  <JobList>
+    <joblist_id>2</joblist_id>
+    <job_name>Job 2</job_name>
+  </JobList>
+  <JobList>
+    <joblist_id>3</joblist_id>
+    <job_name>Job 3</job_name>
+  </JobList>
+  <JobList>
+    <joblist_id>4</joblist_id>
+    <job_name>Job 4</job_name>
+  </JobList>
+  <Orders>
+    <order_id>1</order_id>
+    <client_id>1</client_id>
+    <object_name>Эйфелева башня</object_name>
+    <work_content>Work Content 1</work_content>
+    <start_date_order>2023-01-01T00:00:00+05:00</start_date_order>
+    <end_date_order>2023-01-10T00:00:00+05:00</end_date_order>
+  </Orders>
+  <Orders>
+    <order_id>2</order_id>
+    <client_id>2</client_id>
+    <object_name>Пирамида Хеопса</object_name>
+    <work_content>Work Content 2</work_content>
+    <start_date_order>2023-02-01T00:00:00+05:00</start_date_order>
+    <end_date_order>2023-02-10T00:00:00+05:00</end_date_order>
+  </Orders>
+  <Orders>
+    <order_id>3</order_id>
+    <client_id>3</client_id>
+    <object_name>Колосс Родосский</object_name>
+    <work_content>Work Content 3</work_content>
+    <start_date_order>2023-03-01T00:00:00+05:00</start_date_order>
+    <end_date_order>2023-03-10T00:00:00+05:00</end_date_order>
+  </Orders>
+  <Orders>
+    <order_id>4</order_id>
+    <client_id>4</client_id>
+    <object_name>Храм Артемиды Эфесской</object_name>
+    <work_content>Work Content 4</work_content>
+    <start_date_order>2023-04-01T00:00:00+05:00</start_date_order>
+    <end_date_order>2023-04-10T00:00:00+05:00</end_date_order>
+  </Orders>
+  <Clients>
+    <client_id>1</client_id>
+    <client_name>Соколов Александр Иванович</client_name>
+    <phone>73258910476</phone>
+    <address>Детроид</address>
+    <inn>352197806421</inn>
+  </Clients>
+  <Clients>
+    <client_id>2</client_id>
+    <client_name>Михайлова Татьяна Сергеевна</client_name>
+    <phone>75129834607</phone>
+    <address>Москва</address>
+    <inn>890214365127</inn>
+  </Clients>
+  <Clients>
+    <client_id>3</client_id>
+    <client_name>Козлов Станислав Владимирович</client_name>
+    <phone>78906543210</phone>
+    <address>Караганда</address>
+    <inn>675129034821</inn>
+  </Clients>
+  <Clients>
+    <client_id>4</client_id>
+    <client_name>Лебедева Екатерина Дмитриевна</client_name>
+    <phone>74621093852</phone>
+    <address>Магадан</address>
+    <inn>483215670912</inn>
+  </Clients>
+</UsersSet>
