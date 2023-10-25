@@ -244,8 +244,8 @@ namespace RPBD_LAB_1_WINFORM
                     }
                 }
             }
-
-            string filePath = Path.Combine(@"C:\я у мамы программист\3 курс 1 семестр РПБД\1 лаба\1 лаба но уже на формах\RPBD_LAB_1_WINFORM\", nameFile);
+            
+            string filePath = Path.Combine(GetRightPath(), nameFile);
 
             dataSet.WriteXml(filePath);
         }
@@ -620,7 +620,7 @@ namespace RPBD_LAB_1_WINFORM
                 }
                 else
                 {
-                    // Достигнут корень файловой системы, не удается перейти выше
+                    MessageBox.Show("Неправильный путь считывания dataSet ");
                     break;
                 }
             }
@@ -673,9 +673,9 @@ namespace RPBD_LAB_1_WINFORM
 
             string fileName = "GIgaData.xml";
 
-           // string pathToreadXmlFile = Path.Combine(GetRightPath(), fileName);
+            string pathToreadXmlFile = Path.Combine(GetRightPath(), fileName);
 
-            string pathToreadXmlFile = @"C:\я у мамы программист\3 курс 1 семестр РПБД\1 лаба\1 лаба но уже на формах\RPBD_LAB_1_WINFORM\GIgaData.xml";
+            // string pathToreadXmlFile = @"C:\Users\Prosc\source\repos\5 семестр\РПБД\RPBD_LAB_3_4\RPBD_LAB_3_4\GIgaData.xml";
 
 
             divisionsTable = ReadDataFromXmlFile(pathToreadXmlFile, divisionsTable, "Divisions");

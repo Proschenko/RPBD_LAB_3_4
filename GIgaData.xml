@@ -16,6 +16,10 @@
     <division_id>4</division_id>
     <division_name>Бюро Разбирательства в Забытых Носках</division_name>
   </Divisions>
+  <Divisions>
+    <division_id>5</division_id>
+    <division_name>123</division_name>
+  </Divisions>
   <Employees>
     <employee_id>1</employee_id>
     <employee_name>Иванова Анна Сергеевна</employee_name>

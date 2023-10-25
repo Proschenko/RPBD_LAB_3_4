@@ -55,7 +55,10 @@ namespace RPBD_LAB_1_WINFORM
                 ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
 
                 // Укажите путь к файлу Excel
-                var filePath = @"C:\я у мамы программист\3 курс 1 семестр РПБД\1 лаба\1 лаба но уже на формах\RPBD_LAB_1_WINFORM\Excel_Report_RPBD.xlsx";
+                string fileName = "Excel_Report_RPBD.xlsx";
+
+                string filePath = Path.Combine(MyDataBase.GetRightPath(), fileName);
+
 
                 try
                 {
@@ -102,7 +105,8 @@ namespace RPBD_LAB_1_WINFORM
                 DataTable dataTable = ReportDataView;
 
                 // Укажите путь к файлу Word
-                var filePath = @"C:\я у мамы программист\3 курс 1 семестр РПБД\1 лаба\1 лаба но уже на формах\RPBD_LAB_1_WINFORM\Excel_Report_RPBD.docx";
+                string fileName = "Word_Report_RPBD.docx";
+                string filePath = Path.Combine(MyDataBase.GetRightPath(), fileName);
 
                 try
                 {
