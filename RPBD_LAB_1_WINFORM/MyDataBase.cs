@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Data.SQLite;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -219,6 +219,30 @@ namespace RPBD_LAB_1_WINFORM
             return dataTable;
         }
 
+        private static DataTable ReadDataFromDataBase()
+        {
+            using (var connection = new SQLiteConnection("Data Source=RPBD;Foreign Keys=true;"))
+            {
+                connection.Open();
+                DataTable schema = connection.GetSchema("Tables");
+                foreach (DataRow row in schema.Rows)
+                {
+                    string tableName = row["TABLENAME"].ToString();
+                    if (!tableName.Contains(""))
+                    {
+                        var query = $"SELECT * FROM {tableName}";
+                        using (SQLiteCommand command = new SQLiteCommand(query, connection))
+                        using (var tableAdapter = new SQLiteDataAdapter(command))
+                        {
+                            tableAdapter.Fill(dataSet, tableName);
+                        }
+
+                    }
+
+                }
+            }
+            return new DataTable();
+        }
 
         public static void SaveDataSetToXmlFile(DataSet dataSet, string nameFile)
         {
@@ -677,6 +701,7 @@ namespace RPBD_LAB_1_WINFORM
 
             string pathToreadXmlFile = @"C:\я у мамы программист\3 курс 1 семестр РПБД\1 лаба\1 лаба но уже на формах\RPBD_LAB_1_WINFORM\GIgaData.xml";
 
+            divisionsTable = ReadDataFromDataBase();
 
             divisionsTable = ReadDataFromXmlFile(pathToreadXmlFile, divisionsTable, "Divisions");
 
@@ -690,8 +715,6 @@ namespace RPBD_LAB_1_WINFORM
 
             worksTable = ReadDataFromXmlFile(pathToreadXmlFile, worksTable, "Work");
 
-            MessageBox.Show("На меня летит игриво");
-            MessageBox.Show("ПИВО ПИВО ПИОВ ПИОВ");
             //SaveDataSetToXmlFile(dataSet, "GIgaData.xml");
         } 
     }
