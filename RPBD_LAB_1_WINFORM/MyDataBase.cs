@@ -690,8 +690,7 @@ namespace RPBD_LAB_1_WINFORM
 
             worksTable = ReadDataFromXmlFile(pathToreadXmlFile, worksTable, "Work");
 
-            MessageBox.Show("На меня летит игриво");
-            MessageBox.Show("ПИВО ПИВО ПИОВ ПИОВ");
+            
             //SaveDataSetToXmlFile(dataSet, "GIgaData.xml");
         } 
     }
