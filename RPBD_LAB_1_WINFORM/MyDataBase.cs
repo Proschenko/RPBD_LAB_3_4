@@ -219,29 +219,120 @@ namespace RPBD_LAB_1_WINFORM
             return dataTable;
         }
 
-        private static DataTable ReadDataFromDataBase()
+
+        private static void ReadDataFromDataBase()
         {
-            using (var connection = new SQLiteConnection("Data Source=RPBD;Foreign Keys=true;"))
+            using (var connection = new SQLiteConnection("Data Source=RPBD.db;Foreign Keys=true;"))
             {
                 connection.Open();
-                DataTable schema = connection.GetSchema("Tables");
-                foreach (DataRow row in schema.Rows)
-                {
-                    string tableName = row["TABLENAME"].ToString();
-                    if (!tableName.Contains(""))
-                    {
-                        var query = $"SELECT * FROM {tableName}";
-                        using (SQLiteCommand command = new SQLiteCommand(query, connection))
-                        using (var tableAdapter = new SQLiteDataAdapter(command))
-                        {
-                            tableAdapter.Fill(dataSet, tableName);
-                        }
 
+                string[] tables = new string[] { "Divisions", "Employees", "JobList", "Clients", "Orders", "Work" };
+
+                foreach (var tableName in tables)
+                {
+                    var query = $"SELECT * FROM {tableName}";
+                    using (SQLiteCommand command = new SQLiteCommand(query, connection))
+                    using (var tableAdapter = new SQLiteDataAdapter(command))
+                    {
+                        tableAdapter.Fill(dataSet, tableName);
                     }
 
                 }
             }
-            return new DataTable();
+        }
+
+        private static Tuple<string, string> ReturnMassiveForQuery(string[] atributes)
+        {
+            string str1 = "";
+            string str2 = "";
+            for (int i = 0; i < atributes.Length; i++)
+            {
+                str1 += atributes[i] + ", ";
+                str2 += "?, ";
+            }
+            return Tuple.Create(str1.Remove(str1.Length - 2), str2.Remove(str2.Length - 2));
+        }
+
+        public static void SavevDataSetToDBFile(string tableName, int index, string operation)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=RPBD.db"))
+            {
+                connection.Open();
+                // Создаем таблицы и их атрибуты
+                var tablesAtributes = new Dictionary<string, string[]>
+                {
+                    {"Employees", new [] { "employee_id", "employee_name", "birthday_date", "inn", "snils", "division_id", "passport_data_series", "passport_data_numbers" }},
+                    {"Divisions", new [] { "division_id", "division_name" }},
+                    {"JobList", new [] { "joblist_id", "job_name" }},
+                    {"Clients", new [] { "client_id", "client_name", "phone", "address", "inn" }},
+                    {"Orders", new [] { "order_id", "client_id", "object_name", "work_content", "start_date_order", "end_date_order" }},
+                    {"Work", new [] { "order_id", "joblist_id", "employee_id", "start_date_work", "end_date_work", "job_description" }},
+                };
+                DataTable activeTable = dataSet.Tables[tableName];
+                Tuple<string, string> tuple = ReturnMassiveForQuery(tablesAtributes[tableName]);
+                string[] atributesActiveTable = tablesAtributes[tableName];
+                string paramQuery = tuple.Item1;
+                string valuesQuery = tuple.Item2;
+                string query = "";
+
+                switch (operation)
+                {
+                    case "add":
+                        {
+                            query = $@"INSERT INTO {tableName} ({paramQuery}) VALUES ({valuesQuery})";
+                            break;
+                        }
+                    case "edit":
+                        {
+                            query = $@"UPDATE {tableName} SET";
+                            for (int i = 1; i < atributesActiveTable.Length; i++)
+                            {
+                                query += $@" {atributesActiveTable[i]} = @{atributesActiveTable[i]},";
+                            }
+                            query = query.Remove(query.Length - 1);
+                            query += $@" WHERE {atributesActiveTable[0]} = @{atributesActiveTable[0]}";
+                            break;
+                        }
+                    case "del":
+                        {
+                            query = $@"DELETE FROM {tableName} WHERE {atributesActiveTable[0]} = @{atributesActiveTable[0]}";
+                            break;
+                        }
+                }
+
+
+                switch (operation)
+                {
+
+                    case "del":
+                        {
+                            using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+                            {
+                                cmd.Parameters.AddWithValue("@" + tablesAtributes[tableName][0], index);
+
+                                cmd.ExecuteNonQuery();
+                            }
+                            break;
+                        }
+                    default:
+                        using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+                        {
+                            //DataRow[] foundRows = activeTable.Select($"{tablesAtributes[tableName][0]} = '{index}'");
+                            DataRow dataRow = dataSet.Tables[tableName].Rows[index];
+                            for (int i = 0; i < dataRow.ItemArray.Length; i++)
+                            {
+                                cmd.Parameters.AddWithValue(tablesAtributes[tableName][i], dataRow[i]);
+                            }
+
+                            cmd.ExecuteNonQuery();
+                        }
+                        break;
+                }
+
+                connection.Close();
+            }
+
+
         }
 
         public static void SaveDataSetToXmlFile(DataSet dataSet, string nameFile)
@@ -275,42 +366,6 @@ namespace RPBD_LAB_1_WINFORM
         }
 
 
-
-        //public static  void SaveDataSetToXmlFile(DataSet dataSet, string nameFile)
-        //{
-        //    foreach (DataTable resultTable in dataSet.Tables)
-        //    {
-        //        foreach (DataRow row in resultTable.Rows)
-        //        {
-        //            for (int i = 0; i < resultTable.Columns.Count; i++)
-        //            {
-        //                if (row[i] == DBNull.Value)
-        //                {
-        //                    MessageBox.Show($"{row[i].ToString()}");
-        //                    // Заменяем null на значение по умолчанию (пустая строка или 0, в зависимости от типа столбца)
-        //                    DataColumn column = resultTable.Columns[i];
-        //                    if (column.DataType == typeof(string))
-        //                    {
-        //                        row[i] = string.Empty;
-        //                    }
-        //                    else if (column.DataType == typeof(int))
-        //                    {
-        //                        row[i] = 0;
-        //                    }
-        //                    else if(column.DataType == typeof(long))
-        //                    {
-        //                        row[i] = 0l;
-        //                    }
-        //                    // Другие типы данных также можно обработать по аналогии
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    //string filePath = Path.Combine(GetRightPath(), nameFile);
-        //    string filePath = Path.Combine(@"C:\Users\Prosc\OneDrive\Рабочий стол\RPBD_LAB_1_WINFORM\", nameFile);
-        //    dataSet.WriteXml(filePath);
-        //}
 
         #endregion
 
@@ -701,21 +756,13 @@ namespace RPBD_LAB_1_WINFORM
 
             string pathToreadXmlFile = @"C:\я у мамы программист\3 курс 1 семестр РПБД\1 лаба\1 лаба но уже на формах\RPBD_LAB_1_WINFORM\GIgaData.xml";
 
-            divisionsTable = ReadDataFromDataBase();
-
-            divisionsTable = ReadDataFromXmlFile(pathToreadXmlFile, divisionsTable, "Divisions");
-
-            employeesTable = ReadDataFromXmlFile(pathToreadXmlFile, employeesTable, "Employees");
-
-            jobListTable = ReadDataFromXmlFile(pathToreadXmlFile, jobListTable, "JobList");
-
-            clientsTable = ReadDataFromXmlFile(pathToreadXmlFile, clientsTable, "Clients");
-
-            ordersTable = ReadDataFromXmlFile(pathToreadXmlFile, ordersTable, "Orders");
-
-            worksTable = ReadDataFromXmlFile(pathToreadXmlFile, worksTable, "Work");
-
-            //SaveDataSetToXmlFile(dataSet, "GIgaData.xml");
+            ReadDataFromDataBase();
+            divisionsTable = dataSet.Tables["Divisions"];
+            employeesTable = dataSet.Tables["Employees"];
+            worksTable = dataSet.Tables["Work"];
+            jobListTable = dataSet.Tables["JobList"];
+            ordersTable = dataSet.Tables["Orders"];
+            clientsTable = dataSet.Tables["Clients"];
         } 
     }
 }

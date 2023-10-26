@@ -68,9 +68,13 @@ namespace RPBD_LAB_1_WINFORM
                     break;
 
             }
-            MyDataBase.SaveDataSetToXmlFile(MyDataBase.dataSet, "GIgaData.xml");
-
-
+            
+            if (!IsEditMode)
+            {
+                MyDataBase.SavevDataSetToDBFile(selectedValueInner, MyDataBase.dataSet.Tables[selectedValueInner].Rows.Count - 1, "add");
+            }
+            else
+                MyDataBase.SavevDataSetToDBFile(selectedValueInner, dataGridView.SelectedRows[0].Index, "edit");
         }
         private void AddButton_Click(object sender, EventArgs e)
         {
@@ -260,7 +264,7 @@ namespace RPBD_LAB_1_WINFORM
                                 // “еперь вы можете продолжить удаление этой строки
                                 dataTable.Rows.Remove(rowToDelete);
 
-                                MyDataBase.SaveDataSetToXmlFile(MyDataBase.dataSet, "GIgaData.xml");
+                                MyDataBase.SavevDataSetToDBFile(tableName, (int)rowToDelete[""], "del");
 
                                 RefreshDataGrid(MainComboBox);
 
@@ -317,10 +321,12 @@ namespace RPBD_LAB_1_WINFORM
                     {
                         DataRow rowToDelete = foundRows[0];
 
+                        string nameId = tableName.TrimEnd('s').ToLower() + "_id";
+                        int indexDeleted = (int)rowToDelete[nameId];
+
                         dataTable.Rows.Remove(rowToDelete);
+                        MyDataBase.SavevDataSetToDBFile(tableName, indexDeleted, "del");
 
-
-                        MyDataBase.SaveDataSetToXmlFile(MyDataBase.dataSet, "GIgaData.xml");
                         RefreshDataGrid(MainComboBox);
 
                     }
