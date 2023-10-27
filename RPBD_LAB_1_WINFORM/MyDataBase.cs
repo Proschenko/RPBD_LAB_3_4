@@ -10,6 +10,17 @@ namespace RPBD_LAB_1_WINFORM
 {
     internal class MyDataBase
     {
+        internal static Dictionary<string, string> tableDictionary = new Dictionary<string, string>
+        {
+            { "employee_id", "Employees" },
+            { "division_id", "Divisions" },
+            { "joblist_id", "JobList" },
+            { "client_id", "Clients" },
+            { "order_id", "Orders" },
+            { "Work", "work_id" },
+        };
+
+
         internal static DataSet? dataSet;
 
         internal static DataTable? jobListTable;
@@ -222,7 +233,7 @@ namespace RPBD_LAB_1_WINFORM
 
         private static void ReadDataFromDataBase()
         {
-            using (var connection = new SQLiteConnection("Data Source=RPBD.db;Foreign Keys=true;"))
+            using (var connection = new SQLiteConnection("Data Source=RPBDv2.db;Foreign Keys=true;"))
             {
                 connection.Open();
 
@@ -241,96 +252,107 @@ namespace RPBD_LAB_1_WINFORM
             }
         }
 
-        private static Tuple<string, string> ReturnMassiveForQuery(string[] atributes)
-        {
-            string str1 = "";
-            string str2 = "";
-            for (int i = 0; i < atributes.Length; i++)
-            {
-                str1 += atributes[i] + ", ";
-                str2 += "?, ";
-            }
-            return Tuple.Create(str1.Remove(str1.Length - 2), str2.Remove(str2.Length - 2));
-        }
-
         public static void SavevDataSetToDBFile(string tableName, int index, string operation)
         {
-            using (SQLiteConnection connection = new SQLiteConnection("Data Source=RPBD.db"))
+            string connectionStr = "Data Source=RPBDv2.db;Version=3;"; 
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionStr))
             {
                 connection.Open();
-                // Создаем таблицы и их атрибуты
-                var tablesAtributes = new Dictionary<string, string[]>
+
+                using (SQLiteDataAdapter adapter = new SQLiteDataAdapter())
                 {
-                    {"Employees", new [] { "employee_id", "employee_name", "birthday_date", "inn", "snils", "division_id", "passport_data_series", "passport_data_numbers" }},
-                    {"Divisions", new [] { "division_id", "division_name" }},
-                    {"JobList", new [] { "joblist_id", "job_name" }},
-                    {"Clients", new [] { "client_id", "client_name", "phone", "address", "inn" }},
-                    {"Orders", new [] { "order_id", "client_id", "object_name", "work_content", "start_date_order", "end_date_order" }},
-                    {"Work", new [] { "order_id", "joblist_id", "employee_id", "start_date_work", "end_date_work", "job_description" }},
-                };
-                DataTable activeTable = dataSet.Tables[tableName];
-                Tuple<string, string> tuple = ReturnMassiveForQuery(tablesAtributes[tableName]);
-                string[] atributesActiveTable = tablesAtributes[tableName];
-                string paramQuery = tuple.Item1;
-                string valuesQuery = tuple.Item2;
-                string query = "";
+                    adapter.SelectCommand = new SQLiteCommand($@"SELECT * FROM {tableName}", connection);
 
-                switch (operation)
-                {
-                    case "add":
-                        {
-                            query = $@"INSERT INTO {tableName} ({paramQuery}) VALUES ({valuesQuery})";
-                            break;
-                        }
-                    case "edit":
-                        {
-                            query = $@"UPDATE {tableName} SET";
-                            for (int i = 1; i < atributesActiveTable.Length; i++)
-                            {
-                                query += $@" {atributesActiveTable[i]} = @{atributesActiveTable[i]},";
-                            }
-                            query = query.Remove(query.Length - 1);
-                            query += $@" WHERE {atributesActiveTable[0]} = @{atributesActiveTable[0]}";
-                            break;
-                        }
-                    case "del":
-                        {
-                            query = $@"DELETE FROM {tableName} WHERE {atributesActiveTable[0]} = @{atributesActiveTable[0]}";
-                            break;
-                        }
-                }
-
-
-                switch (operation)
-                {
-
-                    case "del":
-                        {
-                            using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
-                            {
-                                cmd.Parameters.AddWithValue("@" + tablesAtributes[tableName][0], index);
-
-                                cmd.ExecuteNonQuery();
-                            }
-                            break;
-                        }
-                    default:
-                        using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
-                        {
-                            //DataRow[] foundRows = activeTable.Select($"{tablesAtributes[tableName][0]} = '{index}'");
-                            DataRow dataRow = dataSet.Tables[tableName].Rows[index];
-                            for (int i = 0; i < dataRow.ItemArray.Length; i++)
-                            {
-                                cmd.Parameters.AddWithValue(tablesAtributes[tableName][i], dataRow[i]);
-                            }
-
-                            cmd.ExecuteNonQuery();
-                        }
-                        break;
+                    using (SQLiteCommandBuilder commandBuilder = new SQLiteCommandBuilder(adapter))
+                    {
+                        adapter.Update(dataSet, tableName);
+                    }
                 }
 
                 connection.Close();
             }
+
+
+
+
+
+            //using (SQLiteConnection connection = new SQLiteConnection("Data Source=RPBD.db"))
+            //{
+            //    connection.Open();
+            //    // Создаем таблицы и их атрибуты
+            //    var tablesAtributes = new Dictionary<string, string[]>
+            //    {
+            //        {"Employees", new [] { "employee_id", "employee_name", "birthday_date", "inn", "snils", "division_id", "passport_data_series", "passport_data_numbers" }},
+            //        {"Divisions", new [] { "division_id", "division_name" }},
+            //        {"JobList", new [] { "joblist_id", "job_name" }},
+            //        {"Clients", new [] { "client_id", "client_name", "phone", "address", "inn" }},
+            //        {"Orders", new [] { "order_id", "client_id", "object_name", "work_content", "start_date_order", "end_date_order" }},
+            //        {"Work", new [] { "order_id", "joblist_id", "employee_id", "start_date_work", "end_date_work", "job_description" }},
+            //    };
+            //    DataTable activeTable = dataSet.Tables[tableName];
+            //    Tuple<string, string> tuple = ReturnMassiveForQuery(tablesAtributes[tableName]);
+            //    string[] atributesActiveTable = tablesAtributes[tableName];
+            //    string paramQuery = tuple.Item1;
+            //    string valuesQuery = tuple.Item2;
+            //    string query = "";
+
+            //    switch (operation)
+            //    {
+            //        case "add":
+            //            {
+            //                query = $@"INSERT INTO {tableName} ({paramQuery}) VALUES ({valuesQuery})";
+            //                break;
+            //            }
+            //        case "edit":
+            //            {
+            //                query = $@"UPDATE {tableName} SET";
+            //                for (int i = 1; i < atributesActiveTable.Length; i++)
+            //                {
+            //                    query += $@" {atributesActiveTable[i]} = @{atributesActiveTable[i]},";
+            //                }
+            //                query = query.Remove(query.Length - 1);
+            //                query += $@" WHERE {atributesActiveTable[0]} = @{atributesActiveTable[0]}";
+            //                break;
+            //            }
+            //        case "del":
+            //            {
+            //                query = $@"DELETE FROM {tableName} WHERE {atributesActiveTable[0]} = @{atributesActiveTable[0]}";
+            //                break;
+            //            }
+            //    }
+
+
+            //    switch (operation)
+            //    {
+
+            //        case "del":
+            //            {
+            //                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+            //                {
+            //                    cmd.Parameters.AddWithValue("@" + tablesAtributes[tableName][0], index);
+
+            //                    cmd.ExecuteNonQuery();
+            //                }
+            //                break;
+            //            }
+            //        default:
+            //            using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+            //            {
+            //                //DataRow[] foundRows = activeTable.Select($"{tablesAtributes[tableName][0]} = '{index}'");
+            //                DataRow dataRow = dataSet.Tables[tableName].Rows[index];
+            //                for (int i = 0; i < dataRow.ItemArray.Length; i++)
+            //                {
+            //                    cmd.Parameters.AddWithValue(tablesAtributes[tableName][i], dataRow[i]);
+            //                }
+
+            //                cmd.ExecuteNonQuery();
+            //            }
+            //            break;
+            //    }
+
+            //    connection.Close();
+            //}
 
 
         }
@@ -365,7 +387,61 @@ namespace RPBD_LAB_1_WINFORM
             dataSet.WriteXml(filePath);
         }
 
+        public static void DeleteModeCascade(bool cascade)
+        {
+            string deleteModeAfter = cascade ? "CASCADE" : "SET DEFAULT";
+            string deleteModeBefore = cascade ? "SET DEFAULT" : "CASCADE";
+            using (var connection = new SQLiteConnection("Data Source=RPBDv2.db;Foreign Keys=true;"))
+            {
+                connection.Open();
 
+                foreach (var tableName in dataSet.Tables)
+                {
+                    var currentTableDefinition = string.Empty;
+
+                    using (var cmd = new SQLiteCommand($"SELECT sql FROM sqlite_master WHERE type='table' AND name='{tableName}'", connection))
+                    {
+                        currentTableDefinition = cmd.ExecuteScalar().ToString();
+                        currentTableDefinition = currentTableDefinition.Replace("\n", "");
+
+                        List<string> columnNames = new List<string>();
+                        using (SQLiteCommand cmd2 = new SQLiteCommand($"PRAGMA table_info({tableName})", connection))
+                        using (SQLiteDataReader reader = cmd2.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                columnNames.Add(reader["name"].ToString());
+                            }
+                        }
+
+                        foreach (string columnName in columnNames)
+                        {
+                            if (tableDictionary.ContainsKey(columnName))
+                            {
+                                var stringBefore = $"FOREIGN KEY ({columnName}) REFERENCES {tableDictionary[columnName]}({columnName}) ON DELETE {deleteModeBefore}";
+                                if (currentTableDefinition.Contains(stringBefore))
+                                {
+                                    var stringAfter = $"FOREIGN KEY ({columnName}) REFERENCES {tableDictionary[columnName]}({columnName}) ON DELETE {deleteModeAfter}";
+                                    currentTableDefinition = currentTableDefinition.Replace(stringBefore, stringAfter);
+                                }
+                            }
+                        }
+                    }
+
+                    using (var cmd = new SQLiteCommand("PRAGMA writable_schema=1", connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    using (var cmd = new SQLiteCommand($"UPDATE sqlite_master SET sql=@NewDefinition WHERE type='table' AND name='{tableName}'", connection))
+                    {
+                        cmd.Parameters.AddWithValue("@NewDefinition", currentTableDefinition);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                connection.Close();
+            }
+        }
 
         #endregion
 

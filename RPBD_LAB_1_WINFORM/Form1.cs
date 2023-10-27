@@ -1,4 +1,5 @@
 using System.Data;
+using System.Data.SQLite;
 using System.Windows.Forms;
 using Xceed.Document.NET;
 using static OfficeOpenXml.ExcelErrorValue;
@@ -16,6 +17,7 @@ namespace RPBD_LAB_1_WINFORM
             DialogResult result = MessageBox.Show("Вы хотите использовать каскадное удаление?", "Об удалении", MessageBoxButtons.YesNo);
             IsCascadeDelete = result == DialogResult.Yes;
             DeleteButton.Text = IsCascadeDelete ? "Удалить каскадно" : "Удалить НЕ каскадно";
+            MyDataBase.DeleteModeCascade(IsCascadeDelete);
 
             foreach (DataRelation relation in MyDataBase.dataSet.Relations)
             {
@@ -194,155 +196,172 @@ namespace RPBD_LAB_1_WINFORM
         private void DeleteButton_Click_1(object sender, EventArgs e)
         {
 
-            // Проверяем, есть ли выделенные строки
-            if (dataGridView.SelectedRows.Count > 0)
+            using (var connection = new SQLiteConnection("Data Source=RPBDv2.db;Foreign Keys=true;"))
             {
-                DataGridViewRow selectedRow = dataGridView.SelectedRows[0];
-
-                string tableName = MainComboBox.SelectedItem.ToString();
-
-                DataTable dataTable = MyDataBase.dataSet.Tables[tableName];
-
-                string columnName = "YourColumnName";
-                string primaryKeyValue = String.Empty;
-                switch (tableName)
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
                 {
-                    case "Divisions":
-                        columnName = "division_name";
-                        primaryKeyValue = selectedRow.Cells[1].Value.ToString();
-                        break;
+                    // Проверяем, есть ли выделенные строки
+                    if (dataGridView.SelectedRows.Count > 0)
+                    {
+                        DataGridViewRow selectedRow = dataGridView.SelectedRows[0];
 
-                    case "Employees":
-                        columnName = "employee_name";
-                        primaryKeyValue = selectedRow.Cells[1].Value.ToString();
+                        string tableName = MainComboBox.SelectedItem.ToString();
 
-                        break;
+                        DataTable dataTable = MyDataBase.dataSet.Tables[tableName];
 
-                    case "Work":
-
-
-
-                        DataRow[] foundRowsOrder = MyDataBase.ordersTable.Select("object_name = '" + selectedRow.Cells[1].Value + "'");
-                        int orderId = Convert.ToInt32(foundRowsOrder[0]["order_id"]);
-
-
-                        DataRow[] foundRowsJobList = MyDataBase.jobListTable.Select("job_name = '" + selectedRow.Cells[2].Value + "'");
-
-                        int joblistId = Convert.ToInt32(foundRowsJobList[0]["joblist_id"]);
-
-
-
-                        DataRow[] foundRowsEmployee = MyDataBase.employeesTable.Select("employee_name = '" + selectedRow.Cells[3].Value + "'");
-
-                        int employeeId = Convert.ToInt32(foundRowsEmployee[0]["employee_id"]);
-
-                        DateTime searchValue4 = Convert.ToDateTime(selectedRow.Cells[4].Value);
-                        DateTime searchValue5 = Convert.ToDateTime(selectedRow.Cells[5].Value);
-                        string searchValue6 = selectedRow.Cells[6].Value.ToString();
-
-                        DataTable workTable = MyDataBase.worksTable; // Замените на фактическую таблицу
-
-                        var foundRows123 = workTable.AsEnumerable().Where(row =>
-                            row.Field<int>("order_id") == orderId &&
-                            row.Field<int>("joblist_id") == joblistId &&
-                            row.Field<int>("employee_id") == employeeId &&
-                            row.Field<DateTime>("start_date_work") == searchValue4 &&
-                            row.Field<DateTime>("end_date_work") == searchValue5 &&
-                            row.Field<string>("job_description") == searchValue6
-                        ).ToArray();
-
-                        DataRow rowToDelete = foundRows123[0];
-
-
-                        // Уточнение перед удалением
-                        DialogResult dialogResult2 = MessageBox.Show($"Вы действительно хотите удалить эту строку?", "Уточнение перед удалением", MessageBoxButtons.YesNo);
-
-                        if (dialogResult2 == DialogResult.Yes)
+                        string columnName = "YourColumnName";
+                        string primaryKeyValue = String.Empty;
+                        switch (tableName)
                         {
-                            if (IsCascadeDelete)
-                            {
-                                // Теперь вы можете продолжить удаление этой строки
-                                dataTable.Rows.Remove(rowToDelete);
+                            case "Divisions":
+                                columnName = "division_name";
+                                primaryKeyValue = selectedRow.Cells[1].Value.ToString();
+                                break;
 
-                                MyDataBase.SavevDataSetToDBFile(tableName, (int)rowToDelete[""], "del");
+                            case "Employees":
+                                columnName = "employee_name";
+                                primaryKeyValue = selectedRow.Cells[1].Value.ToString();
 
-                                RefreshDataGrid(MainComboBox);
+                                break;
 
-                                MessageBox.Show("Строка успешно удалена.");
-                            }
-                            else
-                            {
-                                dataTable.Rows.Remove(rowToDelete);
-                            }
+                            case "Work":
+                                DataRow[] foundRowsOrder = MyDataBase.ordersTable.Select("object_name = '" + selectedRow.Cells[1].Value + "'");
+                                int orderId = Convert.ToInt32(foundRowsOrder[0]["order_id"]);
+
+                                DataRow[] foundRowsJobList = MyDataBase.jobListTable.Select("job_name = '" + selectedRow.Cells[2].Value + "'");
+                                int joblistId = Convert.ToInt32(foundRowsJobList[0]["joblist_id"]);
+
+                                DataRow[] foundRowsEmployee = MyDataBase.employeesTable.Select("employee_name = '" + selectedRow.Cells[3].Value + "'");
+                                int employeeId = Convert.ToInt32(foundRowsEmployee[0]["employee_id"]);
+
+                                DateTime searchValue4 = Convert.ToDateTime(selectedRow.Cells[4].Value);
+                                DateTime searchValue5 = Convert.ToDateTime(selectedRow.Cells[5].Value);
+                                string searchValue6 = selectedRow.Cells[6].Value.ToString();
+
+                                DataTable workTable = MyDataBase.worksTable; 
+
+                                var foundRows123 = workTable.AsEnumerable().Where(row =>
+                                    row.Field<int>("order_id") == orderId &&
+                                    row.Field<int>("joblist_id") == joblistId &&
+                                    row.Field<int>("employee_id") == employeeId &&
+                                    row.Field<DateTime>("start_date_work") == searchValue4 &&
+                                    row.Field<DateTime>("end_date_work") == searchValue5 &&
+                                    row.Field<string>("job_description") == searchValue6
+                                ).ToArray();
+
+                                DataRow rowToDelete = foundRows123[0];
+
+                                // Уточнение перед удалением
+                                DialogResult dialogResult2 = MessageBox.Show($"Вы действительно хотите удалить эту строку?", "Уточнение перед удалением", MessageBoxButtons.YesNo);
+
+                                if (dialogResult2 == DialogResult.Yes)
+                                {
+                                    if (IsCascadeDelete)
+                                    {
+                                        string[] columnNamesRowToDelete = workTable.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+
+                                        var deleteSql = $"DELETE FROM {tableName} WHERE {columnNamesRowToDelete[0]} = @{columnNamesRowToDelete[0]}";
+                                        for (int k = 1; k < columnNamesRowToDelete.Length; k++)
+                                        {
+                                            deleteSql += $" AND {columnNamesRowToDelete[k]} = @{columnNamesRowToDelete[k]}";
+                                        }
+
+                                        using (var deleteCommand = new SQLiteCommand(deleteSql, connection))
+                                        {
+                                            for (int k = 0; k < columnNamesRowToDelete.Length; k++)
+                                            {
+                                                deleteCommand.Parameters.AddWithValue("@" + columnNamesRowToDelete[k], rowToDelete[columnNamesRowToDelete[k]]);
+                                            }
+                                            deleteCommand.ExecuteNonQuery();
+                                        }
+
+
+                                        workTable.Rows.Remove(rowToDelete);
+                                        MyDataBase.dataSet.AcceptChanges();
+                                        RefreshDataGrid(MainComboBox);
+
+                                        MessageBox.Show("Строка успешно удалена.");
+                                    }
+                                    else
+                                    {
+                                        dataTable.Rows.Remove(rowToDelete);
+                                    }
+
+                                }
+                                else if (dialogResult2 == DialogResult.No)
+                                {
+                                    MessageBox.Show("Удаление отменено.");
+                                }
+                                transaction.Commit();
+                                connection.Close();
+
+                                return;
+
+
+                            case "JobList":
+                                columnName = "job_name";
+                                primaryKeyValue = selectedRow.Cells[1].Value.ToString();
+
+                                break;
+
+                            case "Orders":
+                                columnName = "object_name";
+                                primaryKeyValue = selectedRow.Cells[2].Value.ToString();
+
+                                break;
+
+                            case "Clients":
+                                columnName = "client_name";
+                                primaryKeyValue = selectedRow.Cells[1].Value.ToString();
+
+                                break;
+
+                            default:
+                                MessageBox.Show($"Error WARNING PLS GO HOME");
+                                break;
 
                         }
-                        else if (dialogResult2 == DialogResult.No)
+
+
+
+                        DataRow[] foundRows = dataTable.Select($"{columnName} = '{primaryKeyValue}'");
+
+
+                        DialogResult dialogResult = MessageBox.Show($"Вы действительно хотите удалить эту строку?\n{columnName} = {primaryKeyValue}", "Уточнение перед удалением", MessageBoxButtons.YesNo);
+
+                        if (dialogResult == DialogResult.Yes)
+                        {
+                            if (foundRows.Length > 0)
+                            {
+                                DataRow rowToDelete = foundRows[0];
+
+                                string primaryKeyNameId = tableName.TrimEnd('s').ToLower() + "_id";
+                                int indexDeleted = (int)rowToDelete[primaryKeyNameId];
+                                dataTable.Rows.Remove(rowToDelete);
+                                MyDataBase.dataSet.AcceptChanges();
+                                RefreshDataGrid(MainComboBox);
+
+                                var deleteSql = $"DELETE FROM {tableName} WHERE {primaryKeyNameId} = {"@" + primaryKeyNameId}";
+                                using (var deleteCommand = new SQLiteCommand(deleteSql, connection, transaction))
+                                {
+                                    deleteCommand.Parameters.AddWithValue("@" + primaryKeyNameId, indexDeleted);
+                                    deleteCommand.ExecuteNonQuery();
+                                }
+                            }
+                            MessageBox.Show("Строка успешно удалена.");
+                        }
+                        else if (dialogResult == DialogResult.No)
                         {
                             MessageBox.Show("Удаление отменено.");
                         }
 
-                        return;
-
-
-                    case "JobList":
-                        columnName = "job_name";
-                        primaryKeyValue = selectedRow.Cells[1].Value.ToString();
-
-                        break;
-
-                    case "Orders":
-                        columnName = "object_name";
-                        primaryKeyValue = selectedRow.Cells[2].Value.ToString();
-
-                        break;
-
-                    case "Clients":
-                        columnName = "client_name";
-                        primaryKeyValue = selectedRow.Cells[1].Value.ToString();
-
-                        break;
-
-                    default:
-                        MessageBox.Show($"Error WARNING PLS GO HOME");
-                        break;
-
-                }
-
-
-
-                DataRow[] foundRows = dataTable.Select($"{columnName} = '{primaryKeyValue}'");
-
-
-                DialogResult dialogResult = MessageBox.Show($"Вы действительно хотите удалить эту строку?\n{columnName} = {primaryKeyValue}", "Уточнение перед удалением", MessageBoxButtons.YesNo);
-
-                if (dialogResult == DialogResult.Yes)
-                {
-                    if (foundRows.Length > 0)
-                    {
-                        DataRow rowToDelete = foundRows[0];
-
-                        string nameId = tableName.TrimEnd('s').ToLower() + "_id";
-                        int indexDeleted = (int)rowToDelete[nameId];
-
-                        dataTable.Rows.Remove(rowToDelete);
-                        MyDataBase.SavevDataSetToDBFile(tableName, indexDeleted, "del");
-
-                        RefreshDataGrid(MainComboBox);
 
                     }
-                    MessageBox.Show("Строка успешно удалена.");
+                    transaction.Commit();
                 }
-                else if (dialogResult == DialogResult.No)
-                {
-                    MessageBox.Show("Удаление отменено.");
-                }
-
-
+                connection.Close();
             }
-
-
-
-
 
         }
     }
