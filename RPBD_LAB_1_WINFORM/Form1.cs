@@ -2,7 +2,6 @@ using System.Data;
 using System.Data.SQLite;
 using System.Windows.Forms;
 using Xceed.Document.NET;
-using static OfficeOpenXml.ExcelErrorValue;
 
 namespace RPBD_LAB_1_WINFORM
 {
@@ -196,7 +195,7 @@ namespace RPBD_LAB_1_WINFORM
         private void DeleteButton_Click_1(object sender, EventArgs e)
         {
 
-            using (var connection = new SQLiteConnection("Data Source=RPBDv2.db;Foreign Keys=true;"))
+            using (var connection = new SQLiteConnection("Data Source=RPBDv3.db;Foreign Keys=true;"))
             {
                 connection.Open();
                 using (var transaction = connection.BeginTransaction())
@@ -259,28 +258,18 @@ namespace RPBD_LAB_1_WINFORM
                                 {
                                     if (IsCascadeDelete)
                                     {
-                                        string[] columnNamesRowToDelete = workTable.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
-
-                                        var deleteSql = $"DELETE FROM {tableName} WHERE {columnNamesRowToDelete[0]} = @{columnNamesRowToDelete[0]}";
-                                        for (int k = 1; k < columnNamesRowToDelete.Length; k++)
-                                        {
-                                            deleteSql += $" AND {columnNamesRowToDelete[k]} = @{columnNamesRowToDelete[k]}";
-                                        }
-
-                                        using (var deleteCommand = new SQLiteCommand(deleteSql, connection))
-                                        {
-                                            for (int k = 0; k < columnNamesRowToDelete.Length; k++)
-                                            {
-                                                deleteCommand.Parameters.AddWithValue("@" + columnNamesRowToDelete[k], rowToDelete[columnNamesRowToDelete[k]]);
-                                            }
-                                            deleteCommand.ExecuteNonQuery();
-                                        }
-
-
-                                        workTable.Rows.Remove(rowToDelete);
+                                        string primaryKeyNameId = tableName.TrimEnd('s').ToLower() + "_id";
+                                        int indexDeleted = (int)rowToDelete[primaryKeyNameId];
+                                        dataTable.Rows.Remove(rowToDelete);
                                         MyDataBase.dataSet.AcceptChanges();
                                         RefreshDataGrid(MainComboBox);
 
+                                        var deleteSql = $"DELETE FROM {tableName} WHERE {primaryKeyNameId} = {"@" + primaryKeyNameId}";
+                                        using (var deleteCommand = new SQLiteCommand(deleteSql, connection, transaction))
+                                        {
+                                            deleteCommand.Parameters.AddWithValue("@" + primaryKeyNameId, indexDeleted);
+                                            deleteCommand.ExecuteNonQuery();
+                                        }
                                         MessageBox.Show("Строка успешно удалена.");
                                     }
                                     else

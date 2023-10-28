@@ -167,6 +167,10 @@ namespace RPBD_LAB_1_WINFORM
         {
             // Создаем таблицу "Work"
             DataTable completedWorksTable = new DataTable("Work");
+            DataColumn workIdColumn = new DataColumn("work_id", typeof(int));
+            workIdColumn.AutoIncrement = true;
+            workIdColumn.AutoIncrementSeed = 1;
+            workIdColumn.AutoIncrementStep = 1;
 
             DataColumn workOrderIDColumn = new DataColumn("order_id", typeof(int));
             workOrderIDColumn.AllowDBNull = true;
@@ -176,7 +180,7 @@ namespace RPBD_LAB_1_WINFORM
             DataColumn workEmployeeIDColumn = new DataColumn("employee_id", typeof(int));
             workEmployeeIDColumn.AllowDBNull = true;
 
-
+            completedWorksTable.Columns.Add(workIdColumn);
             completedWorksTable.Columns.Add(workOrderIDColumn);
             completedWorksTable.Columns.Add(workJobListIDColumn);
             completedWorksTable.Columns.Add(workEmployeeIDColumn);
@@ -191,49 +195,9 @@ namespace RPBD_LAB_1_WINFORM
         #endregion
 
         #region Чтение и сохранение
-        static DataTable ReadDataFromXmlFile(string dataPath, DataTable columnTable, string elementByTagName)
-        {
-            DataTable dataTable = columnTable;
-            if (File.Exists(dataPath))
-            {
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.Load(dataPath);
-                XmlNodeList nodes = xmlDoc.GetElementsByTagName(elementByTagName);
-
-                foreach (XmlElement node in nodes)
-                {
-                    DataRow row = columnTable.NewRow();
-                    foreach (XmlNode childNode in node.ChildNodes)
-                    {
-                        string variableName = childNode.Name;
-
-                        DataColumn column = columnTable.Columns[variableName];
-
-                        if (string.Equals(variableName, column.ToString()))
-                        {
-                            row[variableName] = Convert.ChangeType(childNode.InnerText, column.DataType);
-                        }
-                        else
-                        {
-                            row[variableName] = DBNull.Value;
-                        }
-                    }
-
-                    dataTable.Rows.Add(row);
-                }
-            }
-            else
-            {
-                MessageBox.Show("Файл не найден.");
-            }
-
-            return dataTable;
-        }
-
-
         private static void ReadDataFromDataBase()
         {
-            using (var connection = new SQLiteConnection("Data Source=RPBDv2.db;Foreign Keys=true;"))
+            using (var connection = new SQLiteConnection("Data Source=RPBDv3.db;Foreign Keys=true;"))
             {
                 connection.Open();
 
@@ -254,7 +218,7 @@ namespace RPBD_LAB_1_WINFORM
 
         public static void SavevDataSetToDBFile(string tableName, int index, string operation)
         {
-            string connectionStr = "Data Source=RPBDv2.db;Version=3;"; 
+            string connectionStr = "Data Source=RPBDv3.db;Version=3;"; 
 
             using (SQLiteConnection connection = new SQLiteConnection(connectionStr))
             {
@@ -391,7 +355,7 @@ namespace RPBD_LAB_1_WINFORM
         {
             string deleteModeAfter = cascade ? "CASCADE" : "SET DEFAULT";
             string deleteModeBefore = cascade ? "SET DEFAULT" : "CASCADE";
-            using (var connection = new SQLiteConnection("Data Source=RPBDv2.db;Foreign Keys=true;"))
+            using (var connection = new SQLiteConnection("Data Source=RPBDv3.db;Foreign Keys=true;"))
             {
                 connection.Open();
 
