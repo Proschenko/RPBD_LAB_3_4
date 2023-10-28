@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Data.SQLite;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -10,6 +10,17 @@ namespace RPBD_LAB_1_WINFORM
 {
     internal class MyDataBase
     {
+        internal static Dictionary<string, string> tableDictionary = new Dictionary<string, string>
+        {
+            { "employee_id", "Employees" },
+            { "division_id", "Divisions" },
+            { "joblist_id", "JobList" },
+            { "client_id", "Clients" },
+            { "order_id", "Orders" },
+            { "Work", "work_id" },
+        };
+
+
         internal static DataSet? dataSet;
 
         internal static DataTable? jobListTable;
@@ -156,6 +167,10 @@ namespace RPBD_LAB_1_WINFORM
         {
             // Создаем таблицу "Work"
             DataTable completedWorksTable = new DataTable("Work");
+            DataColumn workIdColumn = new DataColumn("work_id", typeof(int));
+            workIdColumn.AutoIncrement = true;
+            workIdColumn.AutoIncrementSeed = 1;
+            workIdColumn.AutoIncrementStep = 1;
 
             DataColumn workOrderIDColumn = new DataColumn("order_id", typeof(int));
             workOrderIDColumn.AllowDBNull = true;
@@ -165,7 +180,7 @@ namespace RPBD_LAB_1_WINFORM
             DataColumn workEmployeeIDColumn = new DataColumn("employee_id", typeof(int));
             workEmployeeIDColumn.AllowDBNull = true;
 
-
+            completedWorksTable.Columns.Add(workIdColumn);
             completedWorksTable.Columns.Add(workOrderIDColumn);
             completedWorksTable.Columns.Add(workJobListIDColumn);
             completedWorksTable.Columns.Add(workEmployeeIDColumn);
@@ -180,45 +195,131 @@ namespace RPBD_LAB_1_WINFORM
         #endregion
 
         #region Чтение и сохранение
-        static DataTable ReadDataFromXmlFile(string dataPath, DataTable columnTable, string elementByTagName)
+        private static void ReadDataFromDataBase()
         {
-            DataTable dataTable = columnTable;
-            if (File.Exists(dataPath))
+            using (var connection = new SQLiteConnection("Data Source=RPBDv3.db;Foreign Keys=true;"))
             {
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.Load(dataPath);
-                XmlNodeList nodes = xmlDoc.GetElementsByTagName(elementByTagName);
+                connection.Open();
 
-                foreach (XmlElement node in nodes)
+                string[] tables = new string[] { "Divisions", "Employees", "JobList", "Clients", "Orders", "Work" };
+
+                foreach (var tableName in tables)
                 {
-                    DataRow row = columnTable.NewRow();
-                    foreach (XmlNode childNode in node.ChildNodes)
+                    var query = $"SELECT * FROM {tableName}";
+                    using (SQLiteCommand command = new SQLiteCommand(query, connection))
+                    using (var tableAdapter = new SQLiteDataAdapter(command))
                     {
-                        string variableName = childNode.Name;
-
-                        DataColumn column = columnTable.Columns[variableName];
-
-                        if (string.Equals(variableName, column.ToString()))
-                        {
-                            row[variableName] = Convert.ChangeType(childNode.InnerText, column.DataType);
-                        }
-                        else
-                        {
-                            row[variableName] = DBNull.Value;
-                        }
+                        tableAdapter.Fill(dataSet, tableName);
                     }
 
-                    dataTable.Rows.Add(row);
                 }
             }
-            else
-            {
-                MessageBox.Show("Файл не найден.");
-            }
-
-            return dataTable;
         }
 
+        public static void SavevDataSetToDBFile(string tableName, int index, string operation)
+        {
+            string connectionStr = "Data Source=RPBDv3.db;Version=3;"; 
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionStr))
+            {
+                connection.Open();
+
+                using (SQLiteDataAdapter adapter = new SQLiteDataAdapter())
+                {
+                    adapter.SelectCommand = new SQLiteCommand($@"SELECT * FROM {tableName}", connection);
+
+                    using (SQLiteCommandBuilder commandBuilder = new SQLiteCommandBuilder(adapter))
+                    {
+                        adapter.Update(dataSet, tableName);
+                    }
+                }
+
+                connection.Close();
+            }
+
+
+
+
+
+            //using (SQLiteConnection connection = new SQLiteConnection("Data Source=RPBD.db"))
+            //{
+            //    connection.Open();
+            //    // Создаем таблицы и их атрибуты
+            //    var tablesAtributes = new Dictionary<string, string[]>
+            //    {
+            //        {"Employees", new [] { "employee_id", "employee_name", "birthday_date", "inn", "snils", "division_id", "passport_data_series", "passport_data_numbers" }},
+            //        {"Divisions", new [] { "division_id", "division_name" }},
+            //        {"JobList", new [] { "joblist_id", "job_name" }},
+            //        {"Clients", new [] { "client_id", "client_name", "phone", "address", "inn" }},
+            //        {"Orders", new [] { "order_id", "client_id", "object_name", "work_content", "start_date_order", "end_date_order" }},
+            //        {"Work", new [] { "order_id", "joblist_id", "employee_id", "start_date_work", "end_date_work", "job_description" }},
+            //    };
+            //    DataTable activeTable = dataSet.Tables[tableName];
+            //    Tuple<string, string> tuple = ReturnMassiveForQuery(tablesAtributes[tableName]);
+            //    string[] atributesActiveTable = tablesAtributes[tableName];
+            //    string paramQuery = tuple.Item1;
+            //    string valuesQuery = tuple.Item2;
+            //    string query = "";
+
+            //    switch (operation)
+            //    {
+            //        case "add":
+            //            {
+            //                query = $@"INSERT INTO {tableName} ({paramQuery}) VALUES ({valuesQuery})";
+            //                break;
+            //            }
+            //        case "edit":
+            //            {
+            //                query = $@"UPDATE {tableName} SET";
+            //                for (int i = 1; i < atributesActiveTable.Length; i++)
+            //                {
+            //                    query += $@" {atributesActiveTable[i]} = @{atributesActiveTable[i]},";
+            //                }
+            //                query = query.Remove(query.Length - 1);
+            //                query += $@" WHERE {atributesActiveTable[0]} = @{atributesActiveTable[0]}";
+            //                break;
+            //            }
+            //        case "del":
+            //            {
+            //                query = $@"DELETE FROM {tableName} WHERE {atributesActiveTable[0]} = @{atributesActiveTable[0]}";
+            //                break;
+            //            }
+            //    }
+
+
+            //    switch (operation)
+            //    {
+
+            //        case "del":
+            //            {
+            //                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+            //                {
+            //                    cmd.Parameters.AddWithValue("@" + tablesAtributes[tableName][0], index);
+
+            //                    cmd.ExecuteNonQuery();
+            //                }
+            //                break;
+            //            }
+            //        default:
+            //            using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+            //            {
+            //                //DataRow[] foundRows = activeTable.Select($"{tablesAtributes[tableName][0]} = '{index}'");
+            //                DataRow dataRow = dataSet.Tables[tableName].Rows[index];
+            //                for (int i = 0; i < dataRow.ItemArray.Length; i++)
+            //                {
+            //                    cmd.Parameters.AddWithValue(tablesAtributes[tableName][i], dataRow[i]);
+            //                }
+
+            //                cmd.ExecuteNonQuery();
+            //            }
+            //            break;
+            //    }
+
+            //    connection.Close();
+            //}
+
+
+        }
 
         public static void SaveDataSetToXmlFile(DataSet dataSet, string nameFile)
         {
@@ -250,43 +351,61 @@ namespace RPBD_LAB_1_WINFORM
             dataSet.WriteXml(filePath);
         }
 
+        public static void DeleteModeCascade(bool cascade)
+        {
+            string deleteModeAfter = cascade ? "CASCADE" : "SET DEFAULT";
+            string deleteModeBefore = cascade ? "SET DEFAULT" : "CASCADE";
+            using (var connection = new SQLiteConnection("Data Source=RPBDv3.db;Foreign Keys=true;"))
+            {
+                connection.Open();
 
+                foreach (var tableName in dataSet.Tables)
+                {
+                    var currentTableDefinition = string.Empty;
 
-        //public static  void SaveDataSetToXmlFile(DataSet dataSet, string nameFile)
-        //{
-        //    foreach (DataTable resultTable in dataSet.Tables)
-        //    {
-        //        foreach (DataRow row in resultTable.Rows)
-        //        {
-        //            for (int i = 0; i < resultTable.Columns.Count; i++)
-        //            {
-        //                if (row[i] == DBNull.Value)
-        //                {
-        //                    MessageBox.Show($"{row[i].ToString()}");
-        //                    // Заменяем null на значение по умолчанию (пустая строка или 0, в зависимости от типа столбца)
-        //                    DataColumn column = resultTable.Columns[i];
-        //                    if (column.DataType == typeof(string))
-        //                    {
-        //                        row[i] = string.Empty;
-        //                    }
-        //                    else if (column.DataType == typeof(int))
-        //                    {
-        //                        row[i] = 0;
-        //                    }
-        //                    else if(column.DataType == typeof(long))
-        //                    {
-        //                        row[i] = 0l;
-        //                    }
-        //                    // Другие типы данных также можно обработать по аналогии
-        //                }
-        //            }
-        //        }
-        //    }
+                    using (var cmd = new SQLiteCommand($"SELECT sql FROM sqlite_master WHERE type='table' AND name='{tableName}'", connection))
+                    {
+                        currentTableDefinition = cmd.ExecuteScalar().ToString();
+                        currentTableDefinition = currentTableDefinition.Replace("\n", "");
 
-        //    //string filePath = Path.Combine(GetRightPath(), nameFile);
-        //    string filePath = Path.Combine(@"C:\Users\Prosc\OneDrive\Рабочий стол\RPBD_LAB_1_WINFORM\", nameFile);
-        //    dataSet.WriteXml(filePath);
-        //}
+                        List<string> columnNames = new List<string>();
+                        using (SQLiteCommand cmd2 = new SQLiteCommand($"PRAGMA table_info({tableName})", connection))
+                        using (SQLiteDataReader reader = cmd2.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                columnNames.Add(reader["name"].ToString());
+                            }
+                        }
+
+                        foreach (string columnName in columnNames)
+                        {
+                            if (tableDictionary.ContainsKey(columnName))
+                            {
+                                var stringBefore = $"FOREIGN KEY ({columnName}) REFERENCES {tableDictionary[columnName]}({columnName}) ON DELETE {deleteModeBefore}";
+                                if (currentTableDefinition.Contains(stringBefore))
+                                {
+                                    var stringAfter = $"FOREIGN KEY ({columnName}) REFERENCES {tableDictionary[columnName]}({columnName}) ON DELETE {deleteModeAfter}";
+                                    currentTableDefinition = currentTableDefinition.Replace(stringBefore, stringAfter);
+                                }
+                            }
+                        }
+                    }
+
+                    using (var cmd = new SQLiteCommand("PRAGMA writable_schema=1", connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    using (var cmd = new SQLiteCommand($"UPDATE sqlite_master SET sql=@NewDefinition WHERE type='table' AND name='{tableName}'", connection))
+                    {
+                        cmd.Parameters.AddWithValue("@NewDefinition", currentTableDefinition);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                connection.Close();
+            }
+        }
 
         #endregion
 
@@ -677,22 +796,13 @@ namespace RPBD_LAB_1_WINFORM
 
             string pathToreadXmlFile = @"C:\я у мамы программист\3 курс 1 семестр РПБД\1 лаба\1 лаба но уже на формах\RPBD_LAB_1_WINFORM\GIgaData.xml";
 
-
-            divisionsTable = ReadDataFromXmlFile(pathToreadXmlFile, divisionsTable, "Divisions");
-
-            employeesTable = ReadDataFromXmlFile(pathToreadXmlFile, employeesTable, "Employees");
-
-            jobListTable = ReadDataFromXmlFile(pathToreadXmlFile, jobListTable, "JobList");
-
-            clientsTable = ReadDataFromXmlFile(pathToreadXmlFile, clientsTable, "Clients");
-
-            ordersTable = ReadDataFromXmlFile(pathToreadXmlFile, ordersTable, "Orders");
-
-            worksTable = ReadDataFromXmlFile(pathToreadXmlFile, worksTable, "Work");
-
-            MessageBox.Show("На меня летит игриво");
-            MessageBox.Show("ПИВО ПИВО ПИОВ ПИОВ");
-            //SaveDataSetToXmlFile(dataSet, "GIgaData.xml");
+            ReadDataFromDataBase();
+            divisionsTable = dataSet.Tables["Divisions"];
+            employeesTable = dataSet.Tables["Employees"];
+            worksTable = dataSet.Tables["Work"];
+            jobListTable = dataSet.Tables["JobList"];
+            ordersTable = dataSet.Tables["Orders"];
+            clientsTable = dataSet.Tables["Clients"];
         } 
     }
 }
